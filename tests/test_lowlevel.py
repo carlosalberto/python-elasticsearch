@@ -84,6 +84,18 @@ class TestTracing(unittest.TestCase):
         self.assertTrue(all(map(lambda x: x.is_finished, self.tracer.spans)))
         self.assertTrue(all(map(lambda x: x.child_of == main_span, self.tracer.spans)))
 
+    def test_trace_bool_payload(self, mock_perform_req):
+        init_tracing(self.tracer)
+
+        # Some operations, as creating an index, return a bool value.
+        mock_perform_req.return_value = False
+
+        mapping = "{'properties': {'body': {}}}"
+        res = self.es.indices.create('test-index', body=mapping)
+        self.assertFalse(res)
+        self.assertEqual(1, len(self.tracer.spans))
+        self.assertEqual(self.tracer.spans[0].is_finished, True)
+
     def test_trace_result_tags(self, mock_perform_req):
         init_tracing(self.tracer, trace_all_requests=False)
 

@@ -79,9 +79,10 @@ class TracingTransport(Transport):
         try:
             rv = super(TracingTransport, self).perform_request(method, url, params, body)
 
-            for member in ResultMembersToAdd:
-                if member in rv:
-                    span.set_tag('elasticsearch.{0}'.format(member), str(rv[member]))
+            if isinstance(rv, dict):
+                for member in ResultMembersToAdd:
+                    if member in rv:
+                        span.set_tag('elasticsearch.{0}'.format(member), str(rv[member]))
 
         except Exception as exc:
             _clear_tracing_state()
