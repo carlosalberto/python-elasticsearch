@@ -73,6 +73,8 @@ class TracingTransport(Transport):
 
         if body:
             span.set_tag('db.statement', body)
+        if params:
+            span.set_tag('elasticsearch.params', params)
 
         try:
             rv = super(TracingTransport, self).perform_request(method, url, params, body)

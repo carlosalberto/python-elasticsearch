@@ -29,7 +29,8 @@ class TestTracing(unittest.TestCase):
         enable_tracing()
 
         body = {"any": "data", "timestamp": datetime.datetime.now()}
-        res = self.es.index(index='test-index', doc_type='tweet', id=1, body=body)
+        res = self.es.index(index='test-index', doc_type='tweet', id=1,
+                            body=body, params={'refresh': True})
         self.assertEqual(mock_perform_req.return_value, res)
         self.assertEqual(1, len(self.tracer.spans))
         self.assertEqual(self.tracer.spans[0].operation_name, 'Prod007/test-index/tweet/1')
@@ -42,6 +43,7 @@ class TestTracing(unittest.TestCase):
             'span.kind': 'client',
             'elasticsearch.url': '/test-index/tweet/1',
             'elasticsearch.method': 'PUT',
+            'elasticsearch.params': {'refresh': True},
         })
 
     def test_trace_none(self, mock_perform_req):
