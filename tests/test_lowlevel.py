@@ -82,6 +82,23 @@ class TestTracing(unittest.TestCase):
         self.assertTrue(all(map(lambda x: x.is_finished, self.tracer.spans)))
         self.assertTrue(all(map(lambda x: x.child_of == main_span, self.tracer.spans)))
 
+    def test_trace_result_tags(self, mock_perform_req):
+        init_tracing(self.tracer, trace_all_requests=False)
+
+        mock_perform_req.return_value = {
+            'found': False,
+            'timed_out': True,
+            'took': 7
+        }
+        enable_tracing()
+        self.es.get(index='test-index', doc_type='tweet', id=1)
+
+        self.assertEqual(1, len(self.tracer.spans))
+        self.assertTrue(all(map(lambda x: x.is_finished, self.tracer.spans)))
+        self.assertEqual('False', self.tracer.spans[0].tags['elasticsearch.found'])
+        self.assertEqual('True', self.tracer.spans[0].tags['elasticsearch.timed_out'])
+        self.assertEqual('7', self.tracer.spans[0].tags['elasticsearch.took'])
+
     def test_disable_tracing(self, mock_perform_req):
         init_tracing(self.tracer, trace_all_requests=False)
 
